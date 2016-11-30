@@ -12,21 +12,32 @@ var app = new Vue({
       reboot: function () {
         this.changeToRunning();
         this.$http.post(apiURL, function () {
-            var status = this.checkStatus();
-            if (status != null) {
-              this.changeToSuccess();
-            }
+			var update = setInterval(this.checkStatus(), 2000);
         }).error(function (data, status, request) {
             this.changeToFail();
         })
       },
-      checkStatus: function() {
-        this.$http.get(statusURL, function (response) {
-            console.log(response['result'])
-        }).error(function (data, status, request) {
-            this.changeToFail();
-        })
-      },
+	  checkStatus: function() {
+		this.$http.get(statusURL, function (response) {
+			var status = response['result']
+			console.log(response['result'])
+			if (status == 'ABORTED') {
+				//this.changeToFail();
+				//clearInterval(update)
+			}
+			if (status == 'SUCCESS') {
+				this.changeToSuccess();
+				clearInterval(update)
+			}
+			if (status == null) {
+				this.changeToSuccess();
+				clearInterval(update)
+			}
+			
+		}).error(function () {
+			this.changeToFail();
+		})
+	  },
       changeToSuccess: function() {
         this.isSuccess = true;
         this.isFailed = false;
