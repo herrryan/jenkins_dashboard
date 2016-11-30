@@ -1,4 +1,5 @@
-var apiURL = 'http://localhost:8080/job/Controller_pipeline/build'
+var apiURL = 'http://192.168.10.224:8080/job/Controller_pipeline/build'
+var statusURL = 'http://192.168.10.224:8080/job/Controller_pipeline/lastBuild/api/json'
 var app = new Vue({
     el: '#app',
     data: {
@@ -8,24 +9,23 @@ var app = new Vue({
       isFailed: false
     },
     methods: {
-      reboot: function (changeToSuccess, changeToFail) {
+      reboot: function () {
         this.changeToRunning();
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function(){
-          if (xhr.readyState == 4 ){
-           if(xhr.status == 200){
-              //console.log(JSON.parse(xhr.responseText).title);
-              changeToSuccess();
-            } else {
-              changeToFail();
+        this.$http.post(apiURL, function () {
+            var status = this.checkStatus();
+            if (status != null) {
+              this.changeToSuccess();
             }
-          }
-        };
-        xhr.onerror = function (e) {
-          changeToFail();
-        };
-        xhr.open('POST', apiURL);
-        xhr.send();
+        }).error(function (data, status, request) {
+            this.changeToFail();
+        })
+      },
+      checkStatus: function() {
+        this.$http.get(statusURL, function (response) {
+            console.log(response['result'])
+        }).error(function (data, status, request) {
+            this.changeToFail();
+        })
       },
       changeToSuccess: function() {
         this.isSuccess = true;
